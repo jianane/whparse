@@ -1,7 +1,4 @@
-import bean.OriginalBean;
-import bean.StatPn;
-import bean.Stock;
-import bean.Warehouse;
+import bean.*;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
@@ -25,11 +22,14 @@ public class WhparseMain {
 	static Set<String> allSelfCheckPn = new HashSet<String>();
 	static Set<String> errorPnSet = new HashSet<String>();
 
+	static Map<String, NCMaterialDoc> pnToNCMaterial = new HashMap<String, NCMaterialDoc>();
+
 
 	final static String SELF_CHECK_PATH = "C:/Users/Administrator/Desktop/whscan/self_check/电子台账0830_1.xlsx";
 	final static String U8_PATH = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.8.31.xls";
 	final static String U8_PATH_Pre_Day = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.08.29.xlsx";
 	final static String PN_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案（序列号管理）_0829.xlsx";
+	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案-20190830.xlsx";
 
 	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0830/";
 	final static String EXPORT_PATH_ALL_RIGHT = EXPORT_PRE + "allRight_jianan.xlsx";
@@ -37,6 +37,8 @@ public class WhparseMain {
 	final static String EXPORT_PATH_NO_SCAN_SAME = EXPORT_PRE + "noScanU8StoreSame_jianan.xlsx";
 	final static String EXPORT_PATH_OTHER = EXPORT_PRE + "other_jianan.xlsx";
 	final static String EXPORT_PATH_ALL = EXPORT_PRE + "all_jianan.xlsx";
+	final static String EXPORT_PATH_NOT_IN_NC = EXPORT_PRE + "notInNC_jianan.xlsx";
+	final static String EXPORT_PATH_IN_NC_NO_SERIAL = EXPORT_PRE + "inNCNoSerial_jianan.xlsx";
 	final static String EXPORT_PATH_NO_Serial = EXPORT_PRE + "noSerial_jianan.xlsx";
 
 	public static void main(String[] args) {
@@ -48,10 +50,41 @@ public class WhparseMain {
 		System.out.println("***************************************allU8Pn : " + allU8Pn.size() + "*************************************************");
 
 		statAddStock();
-//		System.out.println(pnToStat.size());
 
-//		createExcel();
+		generateNCMaterial();
 		createStatistics();
+	}
+	static void generateNCMaterial(){
+		Workbook wb = WhparseMain.readExcel(NC_MATERIAL_DOC_PATH);
+		Sheet sheet = wb.getSheetAt(0);
+		Cell cell;
+		Row row;
+		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+			row = sheet.getRow(i);
+			if (row == null) {
+				continue;
+			}
+
+			cell = row.getCell(1);
+			if (MyUtil.cellIsNull(cell)) {
+				continue;
+			}
+			NCMaterialDoc maDoc = new NCMaterialDoc();
+			String pn = MyUtil.getCellString(cell);
+			maDoc.setPn(pn);
+			cell = row.getCell(2);
+			String pName = MyUtil.getCellString(cell);
+			maDoc.setpName(pName);
+			cell = row.getCell(5);
+			if ("Y".equals(MyUtil.getCellString(cell))) {
+				maDoc.setSerial(true);
+			}
+
+			pnToNCMaterial.put(pn, maDoc);
+
+
+		}
+
 	}
 
 	static void statAddStock() {
@@ -354,16 +387,17 @@ public class WhparseMain {
 	static final String[] HEAD_DESC = new String[]{"物料编码", "扫码数量", "自盘数量", "U8数量", "U8变动数量", "库位(扫码)", "库位(自盘)", "物料名称", "单价"};
 
 	static void createStatistics() {
-		List allStats = new ArrayList();
-		List allRightStats = new ArrayList();
-		List errPnStats = new ArrayList();
-		List noScanU8StoreSameStats = new ArrayList();
-		List otherStats = new ArrayList();
-		List isNotSerialStats = new ArrayList();
+		List<StatPn> allStats = new ArrayList();
+		List<StatPn> notInNCStats = new ArrayList();
+		List<StatPn> inNCNoSerialStats = new ArrayList();
+		List<StatPn> allRightStats = new ArrayList();
+		List<StatPn> errPnStats = new ArrayList();
+		List<StatPn> noScanU8StoreSameStats = new ArrayList();
+		List<StatPn> otherStats = new ArrayList();
+		List<StatPn> isNotSerialStats = new ArrayList();
 
 		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
-//		Set<String> errorPn = WhParseStart.getErrorPn();
-		Set<String> errorPn = getErrorPn();
+//		Set<String> errorPn = getErrorPn();
 		Set<String> isSerialPn = getIsSerialPn();
 		for (Map.Entry<String, StatPn> entry : entries) {
 			StatPn stat = entry.getValue();
@@ -371,33 +405,44 @@ public class WhparseMain {
 			int scanCnt = stat.getScanCnt();
 			int selfCheckCnt = stat.getSelfCheckCnt();
 			int u8Cnt = stat.getU8Cnt();
-
 			if (StockParse.virtualPnSet.contains(pn)) {
 				continue;
 			}
-
 			allStats.add(stat);
+//			if (!isSerialPn.contains(pn)) {
+//				isNotSerialStats.add(stat);
+//			}
 
-			if (!isSerialPn.contains(pn)) {
-				isNotSerialStats.add(stat);
+//			if (errorPn.contains(pn)) {
+//				errPnStats.add(stat);
+//			} else if (scanCnt == selfCheckCnt && scanCnt == u8Cnt) {
+//				allRightStats.add(stat);
+//			} else if (scanCnt == 0 && selfCheckCnt == u8Cnt) {
+//				noScanU8StoreSameStats.add(stat);
+//			} else {
+//				otherStats.add(stat);
+//			}
+		}
+//		createExcel(EXPORT_PATH_ERR_PN, errPnStats);
+		for (StatPn statPn : allStats) {
+			String pn = statPn.getPn();
+			int scanCnt = statPn.getScanCnt();
+			int selfCheckCnt = statPn.getSelfCheckCnt();
+			int u8Cnt = statPn.getU8Cnt();
+			if (!pnToNCMaterial.containsKey(pn)) {
+				notInNCStats.add(statPn);
+			}else if(scanCnt > 0 && !pnToNCMaterial.get(pn).isSerial()){
+				inNCNoSerialStats.add(statPn);
 			}
 
-			if (errorPn.contains(pn)) {
-				errPnStats.add(stat);
-			} else if (scanCnt == selfCheckCnt && scanCnt == u8Cnt) {
-				allRightStats.add(stat);
-			} else if (scanCnt == 0 && selfCheckCnt == u8Cnt) {
-				noScanU8StoreSameStats.add(stat);
-			} else {
-				otherStats.add(stat);
-			}
 		}
 		createExcel(EXPORT_PATH_ALL, allStats);
-		createExcel(EXPORT_PATH_ALL_RIGHT, allRightStats);
-		createExcel(EXPORT_PATH_ERR_PN, errPnStats);
-		createExcel(EXPORT_PATH_NO_SCAN_SAME, noScanU8StoreSameStats);
-		createExcel(EXPORT_PATH_OTHER, otherStats);
-		createExcel(EXPORT_PATH_NO_Serial, isNotSerialStats);
+		createExcel(EXPORT_PATH_NOT_IN_NC, notInNCStats);
+		createExcel(EXPORT_PATH_IN_NC_NO_SERIAL, inNCNoSerialStats);
+//		createExcel(EXPORT_PATH_ALL_RIGHT, allRightStats);
+//		createExcel(EXPORT_PATH_NO_SCAN_SAME, noScanU8StoreSameStats);
+//		createExcel(EXPORT_PATH_OTHER, otherStats);
+//		createExcel(EXPORT_PATH_NO_Serial, isNotSerialStats);
 	}
 
 	static void createExcel(String fileName, List<StatPn> statPns) {
