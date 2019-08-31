@@ -25,13 +25,13 @@ public class WhparseMain {
 	static Map<String, NCMaterialDoc> pnToNCMaterial = new HashMap<String, NCMaterialDoc>();
 
 
-	final static String SELF_CHECK_PATH = "C:/Users/Administrator/Desktop/whscan/self_check/电子台账0830_1.xlsx";
+	final static String SELF_CHECK_PATH = "C:/Users/Administrator/Desktop/whscan/self_check/电子台账0831（关账汇总）.xlsx";
 	final static String U8_PATH = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.8.31.xls";
 	final static String U8_PATH_Pre_Day = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.08.29.xlsx";
 	final static String PN_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案（序列号管理）_0829.xlsx";
-	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案-20190830.xlsx";
+	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案20190831.xlsx";
 
-	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0830/";
+	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0831/";
 	final static String EXPORT_PATH_ALL_RIGHT = EXPORT_PRE + "allRight_jianan.xlsx";
 	final static String EXPORT_PATH_ERR_PN = EXPORT_PRE + "errPn_jianan.xlsx";
 	final static String EXPORT_PATH_NO_SCAN_SAME = EXPORT_PRE + "noScanU8StoreSame_jianan.xlsx";
@@ -52,6 +52,7 @@ public class WhparseMain {
 		statAddStock();
 
 		generateNCMaterial();
+
 		createStatistics();
 	}
 	static void generateNCMaterial(){
@@ -75,7 +76,7 @@ public class WhparseMain {
 			cell = row.getCell(2);
 			String pName = MyUtil.getCellString(cell);
 			maDoc.setpName(pName);
-			cell = row.getCell(5);
+			cell = row.getCell(7);
 			if ("Y".equals(MyUtil.getCellString(cell))) {
 				maDoc.setSerial(true);
 			}
@@ -106,6 +107,7 @@ public class WhparseMain {
 
 	static void parseScanToPnStatPn() {
 		Map<String, OriginalBean> originalMap = WhParseStart.parseScanData();
+		originalMap = WhParseStart.snUniMap;
 		Map<String, Integer> pnToCnt = new HashMap<String, Integer>();
 		Map<String, List<String>> pnToWhs = new HashMap<String, List<String>>();
 		for (OriginalBean originalBean : originalMap.values()) {
@@ -164,7 +166,7 @@ public class WhparseMain {
 		Row row;
 		Cell cell;
 
-		for (int i = 3; i < sheet.getLastRowNum(); i++) {
+		for (int i = 3; i <= sheet.getLastRowNum(); i++) {
 			row = sheet.getRow(i);
 			cell = row.getCell(2);
 			if (cell == null || "".equals(cell.toString().trim())) {
@@ -174,7 +176,7 @@ public class WhparseMain {
 			String pn = cell.toString().toUpperCase().trim();
 			allSelfCheckPn.add(pn);
 			cell = row.getCell(5);
-			if (cell == null) {
+			if (MyUtil.cellIsNull(cell)) {
 				continue;
 			}
 			cell.setCellType(CellType.STRING);
@@ -285,7 +287,7 @@ public class WhparseMain {
 			String pn = MyUtil.getCellUppercaseString(cell);
 
 
-			cell = row.getCell(4);
+			cell = row.getCell(3);
 			if (cell == null || "".equals(cell.toString().trim())) {
 				continue;
 			}
@@ -324,7 +326,7 @@ public class WhparseMain {
 			String pn = MyUtil.getCellUppercaseString(cell);
 			allU8Pn.add(pn);
 
-			cell = row.getCell(4);
+			cell = row.getCell(3);
 			if (cell == null || "".equals(cell.toString().trim())) {
 				continue;
 			}
@@ -376,54 +378,22 @@ public class WhparseMain {
 		System.out.println(pnToStat.size());
 	}
 
-	static Set<String> getErrorPn(){
-		allScanPn.removeAll(allU8Pn);
-		allSelfCheckPn.removeAll(allU8Pn);
-		allScanPn.addAll(allSelfCheckPn);
-		System.out.println("*********************************** Err Pn : " + allScanPn.size()+ "*****************************");
-		return allScanPn;
-	}
-
 	static final String[] HEAD_DESC = new String[]{"物料编码", "扫码数量", "自盘数量", "U8数量", "U8变动数量", "库位(扫码)", "库位(自盘)", "物料名称", "单价"};
 
 	static void createStatistics() {
 		List<StatPn> allStats = new ArrayList();
 		List<StatPn> notInNCStats = new ArrayList();
 		List<StatPn> inNCNoSerialStats = new ArrayList();
-		List<StatPn> allRightStats = new ArrayList();
-		List<StatPn> errPnStats = new ArrayList();
-		List<StatPn> noScanU8StoreSameStats = new ArrayList();
-		List<StatPn> otherStats = new ArrayList();
-		List<StatPn> isNotSerialStats = new ArrayList();
 
 		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
-//		Set<String> errorPn = getErrorPn();
-		Set<String> isSerialPn = getIsSerialPn();
 		for (Map.Entry<String, StatPn> entry : entries) {
 			StatPn stat = entry.getValue();
 			String pn = stat.getPn();
-			int scanCnt = stat.getScanCnt();
-			int selfCheckCnt = stat.getSelfCheckCnt();
-			int u8Cnt = stat.getU8Cnt();
 			if (StockParse.virtualPnSet.contains(pn)) {
 				continue;
 			}
 			allStats.add(stat);
-//			if (!isSerialPn.contains(pn)) {
-//				isNotSerialStats.add(stat);
-//			}
-
-//			if (errorPn.contains(pn)) {
-//				errPnStats.add(stat);
-//			} else if (scanCnt == selfCheckCnt && scanCnt == u8Cnt) {
-//				allRightStats.add(stat);
-//			} else if (scanCnt == 0 && selfCheckCnt == u8Cnt) {
-//				noScanU8StoreSameStats.add(stat);
-//			} else {
-//				otherStats.add(stat);
-//			}
 		}
-//		createExcel(EXPORT_PATH_ERR_PN, errPnStats);
 		for (StatPn statPn : allStats) {
 			String pn = statPn.getPn();
 			int scanCnt = statPn.getScanCnt();
@@ -439,10 +409,25 @@ public class WhparseMain {
 		createExcel(EXPORT_PATH_ALL, allStats);
 		createExcel(EXPORT_PATH_NOT_IN_NC, notInNCStats);
 		createExcel(EXPORT_PATH_IN_NC_NO_SERIAL, inNCNoSerialStats);
-//		createExcel(EXPORT_PATH_ALL_RIGHT, allRightStats);
-//		createExcel(EXPORT_PATH_NO_SCAN_SAME, noScanU8StoreSameStats);
-//		createExcel(EXPORT_PATH_OTHER, otherStats);
-//		createExcel(EXPORT_PATH_NO_Serial, isNotSerialStats);
+	}
+	static void createImpStats() {
+		List<StatPn> allStats = new ArrayList();
+		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
+		for (Map.Entry<String, StatPn> entry : entries) {
+			StatPn stat = entry.getValue();
+			String pn = stat.getPn();
+			if (StockParse.virtualPnSet.contains(pn)) {
+				continue;
+			}
+			allStats.add(stat);
+		}
+		Map<String, OriginalBean> originalMap = WhParseStart.snUniMap;
+		for (OriginalBean originalBean : originalMap.values()) {
+			String pn = originalBean.getPn();
+			if (StockParse.virtualPnSet.contains(pn)) {
+				continue;
+			}
+		}
 	}
 
 	static void createExcel(String fileName, List<StatPn> statPns) {
@@ -488,27 +473,27 @@ public class WhparseMain {
 		}
 	}
 
-	static Set<String> getIsSerialPn(){
-		Set<String> retSet = new HashSet<String>();
-
-		Workbook wb = readExcel(PN_DOC_PATH);
-		Sheet sheet = wb.getSheetAt(0);
-		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-
-			Row row = sheet.getRow(i);
-			if (row == null) {
-				continue;
-			}
-
-			Cell cell = row.getCell(1);
-			if (MyUtil.cellIsNull(cell)) {
-				continue;
-			}
-			String pn = MyUtil.getCellUppercaseString(cell);
-			retSet.add(pn);
-		}
-
-		return retSet;
-	}
+//	static Set<String> getIsSerialPn(){
+//		Set<String> retSet = new HashSet<String>();
+//
+//		Workbook wb = readExcel(PN_DOC_PATH);
+//		Sheet sheet = wb.getSheetAt(0);
+//		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+//
+//			Row row = sheet.getRow(i);
+//			if (row == null) {
+//				continue;
+//			}
+//
+//			Cell cell = row.getCell(1);
+//			if (MyUtil.cellIsNull(cell)) {
+//				continue;
+//			}
+//			String pn = MyUtil.getCellUppercaseString(cell);
+//			retSet.add(pn);
+//		}
+//
+//		return retSet;
+//	}
 
 }
