@@ -1,4 +1,6 @@
 import bean.*;
+import bean.ncimport.NCImpBody;
+import bean.ncimport.NCImpHeader;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
@@ -20,7 +22,6 @@ public class WhparseMain {
 	static Set<String> allScanPn = new HashSet<String>();
 	static Set<String> allU8Pn = new HashSet<String>();
 	static Set<String> allSelfCheckPn = new HashSet<String>();
-	static Set<String> errorPnSet = new HashSet<String>();
 
 	static Map<String, NCMaterialDoc> pnToNCMaterial = new HashMap<String, NCMaterialDoc>();
 
@@ -29,17 +30,13 @@ public class WhparseMain {
 	final static String U8_PATH = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.8.31.xls";
 	final static String U8_PATH_Pre_Day = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.08.29.xlsx";
 	final static String PN_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案（序列号管理）_0829.xlsx";
-	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案20190831.xlsx";
+	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料(1).xlsx";
 
 	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0831/";
-	final static String EXPORT_PATH_ALL_RIGHT = EXPORT_PRE + "allRight_jianan.xlsx";
-	final static String EXPORT_PATH_ERR_PN = EXPORT_PRE + "errPn_jianan.xlsx";
-	final static String EXPORT_PATH_NO_SCAN_SAME = EXPORT_PRE + "noScanU8StoreSame_jianan.xlsx";
-	final static String EXPORT_PATH_OTHER = EXPORT_PRE + "other_jianan.xlsx";
 	final static String EXPORT_PATH_ALL = EXPORT_PRE + "all_jianan.xlsx";
+	final static String EXPORT_PATH_OTHER = EXPORT_PRE + "other_jianan.xlsx";
 	final static String EXPORT_PATH_NOT_IN_NC = EXPORT_PRE + "notInNC_jianan.xlsx";
 	final static String EXPORT_PATH_IN_NC_NO_SERIAL = EXPORT_PRE + "inNCNoSerial_jianan.xlsx";
-	final static String EXPORT_PATH_NO_Serial = EXPORT_PRE + "noSerial_jianan.xlsx";
 
 	public static void main(String[] args) {
 		parseScanToPnStatPn();
@@ -53,9 +50,10 @@ public class WhparseMain {
 
 		generateNCMaterial();
 
-		createStatistics();
+		createImportStatistics();
+//		createStatistics();
 	}
-	static void generateNCMaterial(){
+	public static Map<String, NCMaterialDoc> generateNCMaterial(){
 		Workbook wb = WhparseMain.readExcel(NC_MATERIAL_DOC_PATH);
 		Sheet sheet = wb.getSheetAt(0);
 		Cell cell;
@@ -76,15 +74,25 @@ public class WhparseMain {
 			cell = row.getCell(2);
 			String pName = MyUtil.getCellString(cell);
 			maDoc.setpName(pName);
+
+			cell = row.getCell(5);
+			String unitNo = MyUtil.getCellString(cell);
+			maDoc.setUnitNo(unitNo);
+
+			cell = row.getCell(6);
+			String unit = MyUtil.getCellString(cell);
+			maDoc.setUnit(unit);
+
 			cell = row.getCell(7);
-			if ("Y".equals(MyUtil.getCellString(cell))) {
+			if (!MyUtil.cellIsNull(cell) && "Y".equals(MyUtil.getCellString(cell))) {
 				maDoc.setSerial(true);
 			}
 
 			pnToNCMaterial.put(pn, maDoc);
 
-
 		}
+
+		return pnToNCMaterial;
 
 	}
 
@@ -406,29 +414,13 @@ public class WhparseMain {
 			}
 
 		}
+
+//		createExcel(EXPORT_PATH_OTHER, allStats);
 		createExcel(EXPORT_PATH_ALL, allStats);
 		createExcel(EXPORT_PATH_NOT_IN_NC, notInNCStats);
 		createExcel(EXPORT_PATH_IN_NC_NO_SERIAL, inNCNoSerialStats);
 	}
-	static void createImpStats() {
-		List<StatPn> allStats = new ArrayList();
-		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
-		for (Map.Entry<String, StatPn> entry : entries) {
-			StatPn stat = entry.getValue();
-			String pn = stat.getPn();
-			if (StockParse.virtualPnSet.contains(pn)) {
-				continue;
-			}
-			allStats.add(stat);
-		}
-		Map<String, OriginalBean> originalMap = WhParseStart.snUniMap;
-		for (OriginalBean originalBean : originalMap.values()) {
-			String pn = originalBean.getPn();
-			if (StockParse.virtualPnSet.contains(pn)) {
-				continue;
-			}
-		}
-	}
+
 
 	static void createExcel(String fileName, List<StatPn> statPns) {
 		try {
@@ -473,27 +465,81 @@ public class WhparseMain {
 		}
 	}
 
-//	static Set<String> getIsSerialPn(){
-//		Set<String> retSet = new HashSet<String>();
-//
-//		Workbook wb = readExcel(PN_DOC_PATH);
-//		Sheet sheet = wb.getSheetAt(0);
-//		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-//
-//			Row row = sheet.getRow(i);
-//			if (row == null) {
-//				continue;
-//			}
-//
-//			Cell cell = row.getCell(1);
-//			if (MyUtil.cellIsNull(cell)) {
-//				continue;
-//			}
-//			String pn = MyUtil.getCellUppercaseString(cell);
-//			retSet.add(pn);
-//		}
-//
-//		return retSet;
-//	}
+	static void createImportStatistics() {
+		WhU8NcParse.initU8NcWhMap();
+		Map<String, String> u8KbToNcKb = WhU8NcParse.u8kbToNCkb;
+
+		String impDate = MyUtil.getTodayDate();
+		String orgNo = "01";
+		Map<NCImpHeader, List<NCImpBody>> headerToBodies = new HashMap<NCImpHeader, List<NCImpBody>>();
+		List<StatPn> allStats = new ArrayList();
+		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
+		for (Map.Entry<String, StatPn> entry : entries) {
+			StatPn stat = entry.getValue();
+			String pn = stat.getPn();
+			if (StockParse.virtualPnSet.contains(pn)) {
+				continue;
+			}
+			allStats.add(stat);
+		}
+		Map<String, OriginalBean> originalMap = WhParseStart.snUniMap;
+		for (OriginalBean originalBean : originalMap.values()) {
+			String pn = originalBean.getPn();
+			if (StockParse.virtualPnSet.contains(pn)) {
+				continue;
+			}
+			String sn = originalBean.getSn();
+			String unit = pnToNCMaterial.get(pn).getUnitNo();
+
+			String kw = originalBean.getKw();//待修正
+
+			String u8Kb = "30";// from 张毅龙
+			String kbCode = u8KbToNcKb.get(u8Kb);
+
+//			String kwCode = NCWharehouseParse.getNCKwCode(orgNo, u8Kb, kw);
+
+			NCImpBody body = new NCImpBody();
+			body.setPn(pn);
+			body.setUnit(unit);
+			body.setCount("1");
+			body.setImpDate(impDate);
+			body.setKw(kw);
+			body.setSn(sn);
+			body.setSnUnit(unit);
+
+			NCImpHeader header = NCImpHeader.getHeader(orgNo, kbCode);
+			List<NCImpBody> impBodies = headerToBodies.get(header);
+			if (impBodies == null) {
+				impBodies = new ArrayList<NCImpBody>();
+				headerToBodies.put(header, impBodies);
+			}
+			impBodies.add(body);
+		}
+
+
+
+		Map<String, String> u8kbToImpPath = new HashMap<String, String>();
+		u8kbToImpPath.put("10", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/盘库30期初.xlsx");
+		u8kbToImpPath.put("11", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/盘库31期初.xlsx");
+		u8kbToImpPath.put("13", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/盘库86期初.xlsx");
+		Set<Map.Entry<NCImpHeader, List<NCImpBody>>> entries1 = headerToBodies.entrySet();
+		for (Map.Entry<NCImpHeader, List<NCImpBody>> entry : entries1) {
+			NCImpHeader header = entry.getKey();
+			List<NCImpBody> bodies = entry.getValue();
+			String path = u8kbToImpPath.get(header.getKb());
+
+			header.setId(1l);
+			header.setImpDate(impDate);
+			long id = 0;
+			for (NCImpBody body : bodies) {
+				body.setId(++id);
+				body.setHeadId(1l);
+			}
+
+			GenerateImportData.createImpExcel(path, header, bodies);
+		}
+
+	}
+
 
 }

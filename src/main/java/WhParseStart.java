@@ -72,8 +72,8 @@ public class WhParseStart {
 		for (OriginalBean originalBean : allOriginalBean) {
 			String sn = originalBean.getSn();
 			String pn = originalBean.getPn();
-			if ("XKSWI-JCA0726B".equals(pn)) {
-				System.out.println();
+			if ("XKSWI-SWI2021C".equals(pn) || "CBNNN-JHJ0151A".equals(pn) ) {
+				continue;
 			}
 			if (sameSnToPn.containsKey(sn)) {
 				if (!sameSnToPn.get(sn).equals(pn)) {

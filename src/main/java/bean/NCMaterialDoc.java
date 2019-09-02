@@ -8,6 +8,8 @@ public class NCMaterialDoc {
 	String pn;
 	String pName;
 	boolean isSerial;
+	String unit;
+	String unitNo;
 
 	public String getPn() {
 		return pn;
@@ -33,4 +35,20 @@ public class NCMaterialDoc {
 		isSerial = serial;
 	}
 
+
+	public String getUnit() {
+		return unit;
+	}
+
+	public void setUnit(String unit) {
+		this.unit = unit;
+	}
+
+	public String getUnitNo() {
+		return unitNo;
+	}
+
+	public void setUnitNo(String unitNo) {
+		this.unitNo = unitNo;
+	}
 }

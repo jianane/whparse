@@ -11,12 +11,13 @@ public class NCImpBody {
 	Long id;
 	String pn;
 	String unit;
-	int cnt;
+	String count;
 	String impDate;
-	String whCat; //库别
-	String wh;
+	String kw;
 	String sn;
 	String snUnit;
+
+
 
 	public Long getHeadId() {
 		return headId;
@@ -50,12 +51,12 @@ public class NCImpBody {
 		this.unit = unit;
 	}
 
-	public int getCnt() {
-		return cnt;
+	public String getCount() {
+		return count;
 	}
 
-	public void setCnt(int cnt) {
-		this.cnt = cnt;
+	public void setCount(String count) {
+		this.count = count;
 	}
 
 	public String getImpDate() {
@@ -66,12 +67,12 @@ public class NCImpBody {
 		this.impDate = impDate;
 	}
 
-	public String getWh() {
-		return wh;
+	public String getKw() {
+		return kw;
 	}
 
-	public void setWh(String wh) {
-		this.wh = wh;
+	public void setKw(String kw) {
+		this.kw = kw;
 	}
 
 	public String getSn() {
@@ -88,13 +89,5 @@ public class NCImpBody {
 
 	public void setSnUnit(String snUnit) {
 		this.snUnit = snUnit;
-	}
-
-	public String getWhCat() {
-		return whCat;
-	}
-
-	public void setWhCat(String whCat) {
-		this.whCat = whCat;
 	}
 }

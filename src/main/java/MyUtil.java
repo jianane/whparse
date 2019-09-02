@@ -1,5 +1,9 @@
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +21,10 @@ public class MyUtil {
 	public static String getCellString(Cell cell){
 		return cell.toString().toUpperCase().trim();
 	}
+	public static String getStringTypeCell(Cell cell){
+		cell.setCellType(CellType.STRING);
+		return cell.toString().toUpperCase().trim();
+	}
 
 	public static boolean isContainChinese(String str) {
 		Pattern p = Pattern.compile("[\u4e00-\u9fa5]");
@@ -24,12 +32,18 @@ public class MyUtil {
 		return m.find();
 	}
 
-	public static void main(String[] args){
-	    String test = "asdfsadf；只";
-	    String test1 = "asdfsadf";
-	    test.compareTo(test1);
-		System.out.println(isContainChinese(test));;
 
+	static String getTodayDate(){
+		Date date = new Date();
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
+		String dateString = sdf.format(date);
+
+		return dateString;
 	}
+
+	public static void main(String[] args){
+	    System.out.println(getTodayDate());
+	}
+
 }
