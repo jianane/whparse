@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -17,11 +18,18 @@ import java.util.*;
  */
 public class WhparseMain {
 
+	static int SN_START_INDEX = 0;
+	static String IMP_DATE = MyUtil.getTodayDate();
+
 	static Map<String, StatPn> pnToStat = new LinkedHashMap<String, StatPn>();
+
+	static Map<NCImpHeader, List<NCImpBody>> headerToBodies = new HashMap<NCImpHeader, List<NCImpBody>>();
 
 	static Set<String> allScanPn = new HashSet<String>();
 	static Set<String> allU8Pn = new HashSet<String>();
 	static Set<String> allSelfCheckPn = new HashSet<String>();
+
+	static Map<String, Map<String, Integer>> pnTo_u8KbToCnt = new HashMap<String, Map<String, Integer>>();
 
 	static Map<String, NCMaterialDoc> pnToNCMaterial = new HashMap<String, NCMaterialDoc>();
 
@@ -30,9 +38,9 @@ public class WhparseMain {
 	final static String U8_PATH = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.8.31.xls";
 	final static String U8_PATH_Pre_Day = "C:/Users/Administrator/Desktop/whscan/u8/现存量查询_2019.08.29.xlsx";
 	final static String PN_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案（序列号管理）_0829.xlsx";
-	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料(1).xlsx";
+	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案20190902.xlsx";
 
-	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0831/";
+	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0902/";
 	final static String EXPORT_PATH_ALL = EXPORT_PRE + "all_jianan.xlsx";
 	final static String EXPORT_PATH_OTHER = EXPORT_PRE + "other_jianan.xlsx";
 	final static String EXPORT_PATH_NOT_IN_NC = EXPORT_PRE + "notInNC_jianan.xlsx";
@@ -53,7 +61,8 @@ public class WhparseMain {
 		createImportStatistics();
 //		createStatistics();
 	}
-	public static Map<String, NCMaterialDoc> generateNCMaterial(){
+
+	public static Map<String, NCMaterialDoc> generateNCMaterial() {
 		Workbook wb = WhparseMain.readExcel(NC_MATERIAL_DOC_PATH);
 		Sheet sheet = wb.getSheetAt(0);
 		Cell cell;
@@ -76,12 +85,13 @@ public class WhparseMain {
 			maDoc.setpName(pName);
 
 			cell = row.getCell(5);
+			String unit = MyUtil.getCellString(cell);
+			maDoc.setUnit(unit);
+
+			cell = row.getCell(6);
 			String unitNo = MyUtil.getCellString(cell);
 			maDoc.setUnitNo(unitNo);
 
-			cell = row.getCell(6);
-			String unit = MyUtil.getCellString(cell);
-			maDoc.setUnit(unit);
 
 			cell = row.getCell(7);
 			if (!MyUtil.cellIsNull(cell) && "Y".equals(MyUtil.getCellString(cell))) {
@@ -334,6 +344,7 @@ public class WhparseMain {
 			String pn = MyUtil.getCellUppercaseString(cell);
 			allU8Pn.add(pn);
 
+
 			cell = row.getCell(3);
 			if (cell == null || "".equals(cell.toString().trim())) {
 				continue;
@@ -350,6 +361,19 @@ public class WhparseMain {
 				pnToCnt.put(pn, 0);
 			}
 			pnToCnt.put(pn, pnToCnt.get(pn) + u8Cnt);
+
+			cell = row.getCell(0);// 生成U8物料编码下库别对应的数量
+			String u8KbCode = MyUtil.getCellString(cell);
+			Map<String, Integer> u8kbToCnt = pnTo_u8KbToCnt.get(pn);
+			if (u8kbToCnt == null) {
+				u8kbToCnt = new HashMap<String, Integer>();
+				pnTo_u8KbToCnt.put(pn, u8kbToCnt);
+			}
+			if (!u8kbToCnt.containsKey(u8KbCode)) {
+				u8kbToCnt.put(u8KbCode, 0);
+			}
+			u8kbToCnt.put(u8KbCode, u8kbToCnt.get(u8KbCode) + u8Cnt);
+
 		}
 
 		System.out.println(pnToStat.size());
@@ -409,7 +433,7 @@ public class WhparseMain {
 			int u8Cnt = statPn.getU8Cnt();
 			if (!pnToNCMaterial.containsKey(pn)) {
 				notInNCStats.add(statPn);
-			}else if(scanCnt > 0 && !pnToNCMaterial.get(pn).isSerial()){
+			} else if (scanCnt > 0 && !isSerial(pn)) {
 				inNCNoSerialStats.add(statPn);
 			}
 
@@ -466,71 +490,188 @@ public class WhparseMain {
 	}
 
 	static void createImportStatistics() {
-		WhU8NcParse.initU8NcWhMap();
+		WhU8NcParse.parseKbu8ToNc();
 		Map<String, String> u8KbToNcKb = WhU8NcParse.u8kbToNCkb;
-
-		String impDate = MyUtil.getTodayDate();
 		String orgNo = "01";
-		Map<NCImpHeader, List<NCImpBody>> headerToBodies = new HashMap<NCImpHeader, List<NCImpBody>>();
+//		Map<NCImpHeader, List<NCImpBody>> headerToBodies = new HashMap<NCImpHeader, List<NCImpBody>>();
 		List<StatPn> allStats = new ArrayList();
 		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
 		for (Map.Entry<String, StatPn> entry : entries) {
 			StatPn stat = entry.getValue();
 			String pn = stat.getPn();
-			if (StockParse.virtualPnSet.contains(pn)) {
-				continue;
-			}
+//			if (StockParse.virtualPnSet.contains(pn)) {
+//				continue;
+//			}
 			allStats.add(stat);
 		}
 		Map<String, OriginalBean> originalMap = WhParseStart.snUniMap;
 		for (OriginalBean originalBean : originalMap.values()) {
 			String pn = originalBean.getPn();
-			if (StockParse.virtualPnSet.contains(pn)) {
-				continue;
-			}
+//			if (StockParse.virtualPnSet.contains(pn)) {
+//				continue;
+//			}
 			String sn = originalBean.getSn();
-			String unit = pnToNCMaterial.get(pn).getUnitNo();
+			String unit = getImpUnit(pn);
 
 			String kw = originalBean.getKw();//待修正
-
-			String u8Kb = "30";// from 张毅龙
-			String kbCode = u8KbToNcKb.get(u8Kb);
-
-//			String kwCode = NCWharehouseParse.getNCKwCode(orgNo, u8Kb, kw);
+			String kbCode = WhU8NcParse.getKbCode(pn, kw);
+			String impKw = getImpKw(pn, kw);
 
 			NCImpBody body = new NCImpBody();
 			body.setPn(pn);
 			body.setUnit(unit);
 			body.setCount("1");
-			body.setImpDate(impDate);
-			body.setKw(kw);
+			body.setImpDate(IMP_DATE);
+			body.setKw(impKw);
 			body.setSn(sn);
 			body.setSnUnit(unit);
 
-			NCImpHeader header = NCImpHeader.getHeader(orgNo, kbCode);
-			List<NCImpBody> impBodies = headerToBodies.get(header);
-			if (impBodies == null) {
-				impBodies = new ArrayList<NCImpBody>();
-				headerToBodies.put(header, impBodies);
+			setHeaderToBodies(orgNo, kbCode, body);
+		}
+		for (StatPn stat : allStats) {
+			String pn = stat.getPn();
+			int scanCnt = stat.getScanCnt();
+			int selfCheckCnt = stat.getSelfCheckCnt();
+			int u8Cnt = stat.getU8Cnt();
+			if (scanCnt < selfCheckCnt || scanCnt < u8Cnt) {
+				if (scanCnt == 0 && selfCheckCnt == 0) {// 找u8中的库别，并 入对应库别的虚拟库位
+
+					Map<String, Integer> u8KbToCnt = pnTo_u8KbToCnt.get(pn);
+					Set<Map.Entry<String, Integer>> entries1 = u8KbToCnt.entrySet();
+					for (Map.Entry<String, Integer> entry : entries1) {
+						String u8Kb = entry.getKey();
+						Integer cnt = entry.getValue();
+						String kbCode = u8KbToNcKb.get(u8Kb);
+
+						String kw = "virtual";// 待定@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+						generateBody(pn, cnt, kw, orgNo, kbCode);
+
+					}
+				} else if (scanCnt == 0) {//  如果U8大，用U8的数量，库位借用自盘的
+					if (selfCheckCnt >= u8Cnt) {
+//						Map<String, Integer> kwToCnt = new HashMap<String, Integer>();
+						String[] kw_cnts = stat.getSelfCheckWh().split(" ");
+						for (String kwCnt : kw_cnts) {
+							if ("".equals(kwCnt.trim())) {
+								continue;
+							}
+							String[] kw_cnt = kwCnt.split("=");
+							String kw = kw_cnt[0];
+							int cnt = Integer.parseInt(kw_cnt[1]);
+
+							generateBodyByRealKw(pn, cnt, kw, orgNo);
+						}
+					} else {
+						int cnt = u8Cnt;
+						String kw = getVirtualSnKw(pn, stat.getSelfCheckWh());
+
+						generateBodyByRealKw(pn, cnt, kw, orgNo);
+					}
+
+				} else {// 库位借用扫码的
+					int cnt = selfCheckCnt > u8Cnt ? selfCheckCnt : u8Cnt;
+					cnt -= scanCnt;
+					String kw = getVirtualSnKw(pn, stat.getWh());
+
+					generateBodyByRealKw(pn, cnt, kw, orgNo);
+				}
 			}
-			impBodies.add(body);
 		}
 
 
+		createImpExcelByVo();
+		createImpExcelByVo10kSplit();
 
+	}
+
+	static String getVirtualSnKw(String pn, String whs) {
+		String[] kw_cnts = whs.split(" ");
+		String lessKw = null;
+		String less30Kw = null;
+		for (String kwCnt : kw_cnts) {
+			if ("".equals(kwCnt.trim())) {
+				continue;
+			}
+			String[] kw_cnt = kwCnt.split("=");
+			String kw = kw_cnt[0];
+			String kbCode = WhU8NcParse.getKbCode(pn, kw);
+			if ("10".equals(kbCode)) {
+				if (less30Kw == null) {
+					less30Kw = kw;
+				}
+				less30Kw = less30Kw.compareTo(kw) < 0 ? less30Kw : kw;
+			}
+			if (lessKw == null) {
+				lessKw = kw;
+			}
+			lessKw = lessKw.compareTo(kw) < 0 ? lessKw : kw;
+		}
+		return less30Kw == null ? lessKw : less30Kw;
+	}
+
+	static void generateBodyByRealKw(String pn, int cnt, String kw, String orgNo) {
+		String kbCode = WhU8NcParse.getKbCode(pn, kw);
+		String impKw = getImpKw(pn, kw);
+
+		generateBody(pn, cnt, impKw, orgNo, kbCode);
+	}
+
+
+	static void generateBody(String pn, int cnt, String kw, String orgNo, String kbCode) {
+		String unit = getImpUnit(pn);
+		if (isSerial(pn)) {
+			for (Integer i = 0; i < cnt; i++) {
+				NCImpBody body = new NCImpBody();
+				body.setPn(pn);
+				body.setUnit(unit);
+				body.setCount("1");
+				body.setImpDate(IMP_DATE);
+				body.setKw(kw);
+				body.setSn(InventedSerialNumberUtil.getInventedSerialNumber(orgNo, kbCode, body.getKw(), SN_START_INDEX));
+				body.setSnUnit(unit);
+
+				setHeaderToBodies(orgNo, kbCode, body);
+			}
+		} else {
+			NCImpBody body = new NCImpBody();
+			body.setPn(pn);
+			body.setUnit(unit);
+			body.setCount(cnt + "");
+			body.setImpDate(IMP_DATE);
+			body.setKw(kw);
+//			body.setSn(InventedSerialNumberUtil.getInventedSerialNumber(orgNo, kbCode, body.getKw(), SN_START_INDEX));
+//			body.setSnUnit(unit);
+
+			setHeaderToBodies(orgNo, kbCode, body);
+		}
+	}
+
+	static void setHeaderToBodies(String orgNo, String kbCode, NCImpBody body) {
+		NCImpHeader header = NCImpHeader.getHeader(orgNo, kbCode);
+		List<NCImpBody> impBodies = headerToBodies.get(header);
+		if (impBodies == null) {
+			impBodies = new ArrayList<NCImpBody>();
+			headerToBodies.put(header, impBodies);
+		}
+		impBodies.add(body);
+	}
+
+	static void createImpExcelByVo() {
 		Map<String, String> u8kbToImpPath = new HashMap<String, String>();
 		u8kbToImpPath.put("10", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/盘库30期初.xlsx");
 		u8kbToImpPath.put("11", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/盘库31期初.xlsx");
 		u8kbToImpPath.put("13", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/盘库86期初.xlsx");
 		Set<Map.Entry<NCImpHeader, List<NCImpBody>>> entries1 = headerToBodies.entrySet();
+		long id = 0;
 		for (Map.Entry<NCImpHeader, List<NCImpBody>> entry : entries1) {
 			NCImpHeader header = entry.getKey();
 			List<NCImpBody> bodies = entry.getValue();
 			String path = u8kbToImpPath.get(header.getKb());
 
 			header.setId(1l);
-			header.setImpDate(impDate);
-			long id = 0;
+			header.setImpDate(IMP_DATE);
+
 			for (NCImpBody body : bodies) {
 				body.setId(++id);
 				body.setHeadId(1l);
@@ -538,8 +679,68 @@ public class WhparseMain {
 
 			GenerateImportData.createImpExcel(path, header, bodies);
 		}
-
 	}
 
+	static void createImpExcelByVo10kSplit() {
+		int splitCnt = 10000;
+		Map<String, String> u8kbToImpPath = new HashMap<String, String>();
+		u8kbToImpPath.put("10", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/30/盘库30期初_");
+		u8kbToImpPath.put("11", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/31/盘库31期初_");
+		u8kbToImpPath.put("13", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/86/盘库86期初_");
+		Set<Map.Entry<NCImpHeader, List<NCImpBody>>> entries1 = headerToBodies.entrySet();
+		long id = 0;
+		List<NCImpBody> splitBodyList = new ArrayList<NCImpBody>();
+		for (Map.Entry<NCImpHeader, List<NCImpBody>> entry : entries1) {
+			NCImpHeader header = entry.getKey();
+			List<NCImpBody> bodies = entry.getValue();
+			String path = u8kbToImpPath.get(header.getKb());
+
+			header.setId(1l);
+			header.setImpDate(IMP_DATE);
+
+			int cnt = 0;
+			int fileCnt = 0;
+			for (NCImpBody body : bodies) {
+
+				body.setId(++id);
+				body.setHeadId(1l);
+
+				cnt++;
+				splitBodyList.add(body);
+				if (cnt % splitCnt == 0) {
+					fileCnt ++;
+					GenerateImportData.createImpExcel(path + fileCnt + ".xlsx", header, splitBodyList);
+					splitBodyList.clear();
+				}
+			}
+			if (splitBodyList.size() > 0) {
+				fileCnt ++;
+				GenerateImportData.createImpExcel(path + fileCnt + ".xlsx", header, splitBodyList);
+				splitBodyList.clear();
+			}
+		}
+	}
+
+	static String getUnit(String pn) {
+		return pnToNCMaterial.get(pn).getUnit();
+	}
+
+	static String getUnitNo(String pn) {
+		return pnToNCMaterial.get(pn).getUnitNo();
+	}
+
+	static boolean isSerial(String pn) {
+		return pnToNCMaterial.get(pn).isSerial();
+	}
+
+	static String getImpUnit(String pn){
+		return getUnitNo(pn);
+//		return getUnit(pn);
+	}
+	static String getImpKw(String pn, String kw){
+		String impKw = WhU8NcParse.getKwName(pn, kw);
+//		String impKw = WhU8NcParse.getKwCode(pn, kw);
+		return impKw;
+	}
 
 }

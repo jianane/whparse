@@ -82,7 +82,7 @@ public class GenerateImportData {
 					body.setPn(pn);
 					body.setUnit(unit);
 					body.setCount("1");
-					body.setKw("01");
+					body.setKw("借测期初");
 					body.setImpDate(IMP_DATE);
 					body.setSn(InventedSerialNumberUtil.getInventedSerialNumber(header.getNcOrg(), header.getKb(), body.getKw()));
 					body.setSnUnit(unit);
@@ -95,7 +95,7 @@ public class GenerateImportData {
 				body.setPn(pn);
 				body.setUnit(unit);
 				body.setCount(count + "");
-				body.setKw("01");
+				body.setKw("借测期初");
 				body.setImpDate(IMP_DATE);
 
 				impBodies.add(body);
@@ -154,8 +154,8 @@ public class GenerateImportData {
 					body.setUnit(unit);
 					body.setCount("1");
 					body.setKw("在线期初");
-					body.setImpDate("2019-08-31");
-					body.setSn(InventedSerialNumberUtil.getInventedSerialNumber(header.getNcOrg(), header.getKb(), body.getKw(), 89000) );
+					body.setImpDate(IMP_DATE);
+					body.setSn(InventedSerialNumberUtil.getInventedSerialNumber(header.getNcOrg(), header.getKb(), body.getKw()) );
 					body.setSnUnit(unit);
 
 					impBodies.add(body);
@@ -167,7 +167,7 @@ public class GenerateImportData {
 				body.setUnit(unit);
 				body.setCount(count);
 				body.setKw("在线期初");
-				body.setImpDate("2019-08-31");
+				body.setImpDate(IMP_DATE);
 
 				impBodies.add(body);
 			}
@@ -328,7 +328,7 @@ public class GenerateImportData {
 	}
 
 	public static void main(String[] args) {
-//		generateJieceData();
+		generateJieceData();
 		generateOnLineData();
 //		generateShippedData();
 	}

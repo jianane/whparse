@@ -11,16 +11,19 @@ import java.util.*;
  */
 public class WhU8NcParse {
 
-	static Map<String, String> org_ncKb_u8KwToNcKb = new HashMap<String, String>();
+	private static Map<String, String> org_ncKb_u8KwToNcKb = new HashMap<String, String>();
 
-	static Map<String, String> pn_kwToU8Kb = new HashMap<String, String>();
+	private static Map<String, String> pn_kwToU8Kb = new HashMap<String, String>();
+	private static Map<String, String> pn_kwToKbCode = new HashMap<String, String>();
+	private static Map<String, String> pn_kwToKwCode = new HashMap<String, String>();
+	private static Map<String, String> pn_kwToKwName = new HashMap<String, String>();
 
-	static Map<String, Set<String>> selfNotInNC = new HashMap<String, Set<String>>();
+	private static Map<String, Set<String>> selfNotInNC = new HashMap<String, Set<String>>();
 
 	static Map<String, String> u8kbToNCkb = new HashMap<String, String>();
 	static Map<String, List<String>> ncKbToU8Kw = new HashMap<String, List<String>>();
 
-	static Map<String, List<String>> u8KbToU8Kw = new HashMap<String, List<String>>();
+	private static Map<String, List<String>> u8KbToU8Kw = new HashMap<String, List<String>>();
 
 	static void parseKbu8ToNc(){
 		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/仓库对照.xlsx");
@@ -42,7 +45,7 @@ public class WhU8NcParse {
 		}
 	}
 
-	static void parseNcBdWh(){
+	private static void parseNcBdWh(){
 		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/货位导入-0830.xlsx");
 		Sheet sheet = wb.getSheetAt(0);
 		Row row;
@@ -73,63 +76,86 @@ public class WhU8NcParse {
 
 		}
 	}
-	static String getNCKbKey(String ncOrg, String ncKb, String u8Kw){
+	private static String getNCKbKey(String ncOrg, String ncKb, String u8Kw){
 		return ncOrg + "_" + ncKb + "_" + u8Kw;
 	}
 
-	static void parseSelfCheckZhMap(){
+	private static void parseSelfCheckZhMap(){
 		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/onlyWuWeiLeiBie.xlsx");
 		Sheet sheet = wb.getSheetAt(0);
 		Row row;
 		Cell cell;
 		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
 			row = sheet.getRow(i);
-			cell = row.getCell(0); //u8Kw
-			String u8Kw = MyUtil.getCellString(cell);
-
-			cell = row.getCell(1); //pn
+			cell = row.getCell(0); //pn
 			String pn = MyUtil.getCellString(cell);
 
-			cell = row.getCell(2); //u8Kb
+			cell = row.getCell(1); //u8Kw
+			String u8Kw = MyUtil.getCellString(cell);
+
+			cell = row.getCell(2); //kwCode
+			String kwCode = MyUtil.getStringTypeCell(cell);
+
+			cell = row.getCell(3); //kwName
+			String kwName = MyUtil.getStringTypeCell(cell);
+
+			cell = row.getCell(4); //u8Kb  30  31  86
 			String u8Kb = MyUtil.getStringTypeCell(cell);
 
+			cell = row.getCell(5); //kbCode  10  11  13
+			String kbCode = MyUtil.getStringTypeCell(cell);
 
-			List<String> u8Kws = u8KbToU8Kw.get(u8Kb);
-			if (u8Kws == null) {
-				u8Kws = new ArrayList<String>();
-				u8KbToU8Kw.put(u8Kb, u8Kws);
-			}
-			u8Kws.add(u8Kw);
+			pn_kwToKwCode.put(getPn_KwKey(pn, u8Kw), kwCode);
+			pn_kwToKwName.put(getPn_KwKey(pn, u8Kw), kwName);
 
 			pn_kwToU8Kb.put(getPn_KwKey(pn, u8Kw), u8Kb);
+			pn_kwToKbCode.put(getPn_KwKey(pn, u8Kw), kbCode);
+
+
 		}
 	}
-	static String getPn_KwKey(String pn, String u8Kw){
+	private static String getPn_KwKey(String pn, String u8Kw){
 		return pn + "_" + u8Kw;
 	}
 
-	static void parsePnKwToNCKbMap(String pn, String kw){
-
+	public static String getU8KbCode(String pn, String kw){
 		if(pn_kwToU8Kb.size() == 0){
 			parseSelfCheckZhMap();
 		}
 		String u8Kb = pn_kwToU8Kb.get(getPn_KwKey(pn, kw));
-		if (u8kbToNCkb.size() == 0) {
-			parseKbu8ToNc();
-		}
-		String ncKb = u8kbToNCkb.get(u8Kb);
-
-		if (org_ncKb_u8KwToNcKb.size() == 0) {
-			parseNcBdWh();
-		}
-		String ncKw = org_ncKb_u8KwToNcKb.get(getNCKbKey("01", ncKb, kw));
-
+		return u8Kb;
 	}
-	public static void initU8NcWhMap(){
-		parseKbu8ToNc();
-		parseNcBdWh();
-		parseSelfCheckZhMap();
+	public static String getKbCode(String pn, String kw){
+//		if(pn_kwToKbCode.size() == 0){
+//			parseSelfCheckZhMap();
+//		}
+//		String kbCode = pn_kwToKbCode.get(getPn_KwKey(pn, kw));
+//		return kbCode;
+
+		return "10";
 	}
+
+	public static String getKwCode(String pn, String kw){
+		if(pn_kwToKwCode.size() == 0){
+			parseSelfCheckZhMap();
+		}
+		String kwCode = pn_kwToKwCode.get(getPn_KwKey(pn, kw));
+		return kwCode;
+	}
+	public static String getKwName(String pn, String kw){
+//		if(pn_kwToKwName.size() == 0){
+//			parseSelfCheckZhMap();
+//		}
+//		String kwCode = pn_kwToKwName.get(getPn_KwKey(pn, kw));
+//		return kwCode;
+
+		return "KWZZZZ";
+	}
+//	public static void initU8NcWhMap(){
+//		parseKbu8ToNc();
+////		parseNcBdWh();
+//		parseSelfCheckZhMap();
+//	}
 
 	public static void main(String[] args){
 	    parseKbu8ToNc();
