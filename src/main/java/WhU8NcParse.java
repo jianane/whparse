@@ -81,7 +81,7 @@ public class WhU8NcParse {
 	}
 
 	private static void parseSelfCheckZhMap(){
-		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/onlyWuWeiLeiBie.xlsx");
+		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/onlyCompleteKuBie.xlsx");
 		Sheet sheet = wb.getSheetAt(0);
 		Row row;
 		Cell cell;
@@ -94,16 +94,16 @@ public class WhU8NcParse {
 			String u8Kw = MyUtil.getCellString(cell);
 
 			cell = row.getCell(2); //kwCode
-			String kwCode = MyUtil.getStringTypeCell(cell);
+			String kwCode = MyUtil.getCellString(cell);
 
 			cell = row.getCell(3); //kwName
-			String kwName = MyUtil.getStringTypeCell(cell);
+			String kwName = MyUtil.getCellString(cell);
 
-			cell = row.getCell(4); //u8Kb  30  31  86
-			String u8Kb = MyUtil.getStringTypeCell(cell);
+			cell = row.getCell(4); //kbCode  10  11  13
+			String kbCode = MyUtil.getCellString(cell);
 
-			cell = row.getCell(5); //kbCode  10  11  13
-			String kbCode = MyUtil.getStringTypeCell(cell);
+			cell = row.getCell(5); //u8Kb  30  31  86
+			String u8Kb = MyUtil.getCellString(cell);
 
 			pn_kwToKwCode.put(getPn_KwKey(pn, u8Kw), kwCode);
 			pn_kwToKwName.put(getPn_KwKey(pn, u8Kw), kwName);
@@ -126,13 +126,13 @@ public class WhU8NcParse {
 		return u8Kb;
 	}
 	public static String getKbCode(String pn, String kw){
-//		if(pn_kwToKbCode.size() == 0){
-//			parseSelfCheckZhMap();
-//		}
-//		String kbCode = pn_kwToKbCode.get(getPn_KwKey(pn, kw));
-//		return kbCode;
+		if(pn_kwToKbCode.size() == 0){
+			parseSelfCheckZhMap();
+		}
+		String kbCode = pn_kwToKbCode.get(getPn_KwKey(pn, kw));
+		return kbCode;
 
-		return "10";
+//		return "10";
 	}
 
 	public static String getKwCode(String pn, String kw){
@@ -143,13 +143,13 @@ public class WhU8NcParse {
 		return kwCode;
 	}
 	public static String getKwName(String pn, String kw){
-//		if(pn_kwToKwName.size() == 0){
-//			parseSelfCheckZhMap();
-//		}
-//		String kwCode = pn_kwToKwName.get(getPn_KwKey(pn, kw));
-//		return kwCode;
+		if(pn_kwToKwName.size() == 0){
+			parseSelfCheckZhMap();
+		}
+		String kwCode = pn_kwToKwName.get(getPn_KwKey(pn, kw));
+		return kwCode;
 
-		return "KWZZZZ";
+//		return "KWZZZZ";
 	}
 //	public static void initU8NcWhMap(){
 //		parseKbu8ToNc();

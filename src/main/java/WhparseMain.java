@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -19,7 +18,8 @@ import java.util.*;
 public class WhparseMain {
 
 	static int SN_START_INDEX = 0;
-	static String IMP_DATE = MyUtil.getTodayDate();
+	static String IMP_DATE = "2019-08-31";//MyUtil.getTodayDate();
+	final static String U8_ONLY_KW = "期初-差异"; // 66
 
 	static Map<String, StatPn> pnToStat = new LinkedHashMap<String, StatPn>();
 
@@ -421,9 +421,9 @@ public class WhparseMain {
 		for (Map.Entry<String, StatPn> entry : entries) {
 			StatPn stat = entry.getValue();
 			String pn = stat.getPn();
-			if (StockParse.virtualPnSet.contains(pn)) {
-				continue;
-			}
+//			if (StockParse.virtualPnSet.contains(pn)) {
+//				continue;
+//			}
 			allStats.add(stat);
 		}
 		for (StatPn statPn : allStats) {
@@ -493,7 +493,6 @@ public class WhparseMain {
 		WhU8NcParse.parseKbu8ToNc();
 		Map<String, String> u8KbToNcKb = WhU8NcParse.u8kbToNCkb;
 		String orgNo = "01";
-//		Map<NCImpHeader, List<NCImpBody>> headerToBodies = new HashMap<NCImpHeader, List<NCImpBody>>();
 		List<StatPn> allStats = new ArrayList();
 		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
 		for (Map.Entry<String, StatPn> entry : entries) {
@@ -513,7 +512,7 @@ public class WhparseMain {
 			String sn = originalBean.getSn();
 			String unit = getImpUnit(pn);
 
-			String kw = originalBean.getKw();//待修正
+			String kw = originalBean.getKw();
 			String kbCode = WhU8NcParse.getKbCode(pn, kw);
 			String impKw = getImpKw(pn, kw);
 
@@ -543,7 +542,7 @@ public class WhparseMain {
 						Integer cnt = entry.getValue();
 						String kbCode = u8KbToNcKb.get(u8Kb);
 
-						String kw = "virtual";// 待定@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+						String kw = U8_ONLY_KW;// 待定@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 						generateBody(pn, cnt, kw, orgNo, kbCode);
 
@@ -580,7 +579,7 @@ public class WhparseMain {
 		}
 
 
-		createImpExcelByVo();
+//		createImpExcelByVo();
 		createImpExcelByVo10kSplit();
 
 	}
@@ -613,7 +612,6 @@ public class WhparseMain {
 	static void generateBodyByRealKw(String pn, int cnt, String kw, String orgNo) {
 		String kbCode = WhU8NcParse.getKbCode(pn, kw);
 		String impKw = getImpKw(pn, kw);
-
 		generateBody(pn, cnt, impKw, orgNo, kbCode);
 	}
 
@@ -648,6 +646,10 @@ public class WhparseMain {
 	}
 
 	static void setHeaderToBodies(String orgNo, String kbCode, NCImpBody body) {
+		if (kbCode == null) {
+			System.out.println();
+			throw new RuntimeException();
+		}
 		NCImpHeader header = NCImpHeader.getHeader(orgNo, kbCode);
 		List<NCImpBody> impBodies = headerToBodies.get(header);
 		if (impBodies == null) {
@@ -682,7 +684,7 @@ public class WhparseMain {
 	}
 
 	static void createImpExcelByVo10kSplit() {
-		int splitCnt = 10000;
+		int splitCnt = 20000;
 		Map<String, String> u8kbToImpPath = new HashMap<String, String>();
 		u8kbToImpPath.put("10", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/30/盘库30期初_");
 		u8kbToImpPath.put("11", "C:/Users/Administrator/Desktop/whscan/博达303186Serial期初数据/31/盘库31期初_");
@@ -742,5 +744,6 @@ public class WhparseMain {
 //		String impKw = WhU8NcParse.getKwCode(pn, kw);
 		return impKw;
 	}
+
 
 }

@@ -90,4 +90,9 @@ public class NCImpBody {
 	public void setSnUnit(String snUnit) {
 		this.snUnit = snUnit;
 	}
+
+	public static void main(String[] args){
+	    System.out.println("KWA9通道".compareTo("5楼"));
+
+	}
 }
