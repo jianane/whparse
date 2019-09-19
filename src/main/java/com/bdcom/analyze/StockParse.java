@@ -1,4 +1,7 @@
-import bean.Stock;
+package com.bdcom.analyze;
+
+import com.bdcom.bean.Stock;
+import com.bdcom.util.MyUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -19,7 +22,7 @@ public class StockParse {
 	public static Set<String> virtualPnSet = new HashSet<String>();
 
 	public static Map<String, Stock> parseStock(){
-		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/stock/现存量查___0190828.9.41.xlsx");
+		Workbook wb = MyUtil.readExcel("C:/Users/Administrator/Desktop/whscan/stock/现存量查___0190828.9.41.xlsx");
 		Cell cell;
 		for (int i = 0; i < wb.getNumberOfSheets(); i++) {
 			Sheet sheet = wb.getSheetAt(i);

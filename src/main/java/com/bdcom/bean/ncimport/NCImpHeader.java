@@ -1,4 +1,4 @@
-package bean.ncimport;
+package com.bdcom.bean.ncimport;
 
 import java.util.HashMap;
 import java.util.HashSet;

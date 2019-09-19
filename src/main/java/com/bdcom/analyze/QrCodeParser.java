@@ -1,3 +1,5 @@
+package com.bdcom.analyze;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,6 +78,88 @@ public class QrCodeParser {
 	public static final String MACStart = "MAC";
 	public static final int MacLen = "98:45:62:69:50:fb".length() ; //18
 
+	public static List<String> parse1(String srcStr ){
+
+		List<String> snList = new ArrayList<String>();
+
+		String[] lineSplit = (srcStr).split("\r\n");
+		if( lineSplit.length == 1 ){
+			lineSplit = srcStr.split("\n");
+		}
+
+		for(String str : lineSplit  ){
+
+			if(  isBlank(str) ){
+				//为空白字符不处理
+			}else{
+				String[] split = str.split(" ");
+				int sLen = split.length ;
+				for(  String sss : split ){
+					sss = sss.toUpperCase();
+					if(  isBlank(sss) ){
+						//为空白字符不处理
+					}else{
+//						System.out.print(  sss + "===" );
+
+						// 以SN:开头的
+						if(  sss.startsWith( "SN" + colon1) ||  sss.startsWith( "SN"  + colon2 ) ||  sss.startsWith( "SN;" ) ){
+							String tmpSn = null;
+							tmpSn = sss.substring(3);
+							int macIndex = tmpSn.indexOf("MAC");
+							if(  macIndex!=-1 ){
+								tmpSn= tmpSn.substring( 0 , macIndex);
+							}
+							if( tmpSn!=null && tmpSn.length()>2 ){
+								snList.add(tmpSn.trim());
+							}
+						}
+						else if(  sss.startsWith( "S/N:")){
+							String tmpSn = null;
+							tmpSn = sss.substring(4);
+							int macIndex = tmpSn.indexOf("MAC");
+							if(  macIndex!=-1 ){
+								tmpSn= tmpSn.substring( 0 , macIndex);
+							}
+							if( tmpSn!=null && tmpSn.length()>2 ){
+								snList.add(tmpSn.trim());
+							}
+						}
+						else if( sss.startsWith( "MAC" + colon1) || sss.startsWith( "MAC"  + colon2 )  ) {
+
+						} else if( sss.startsWith( "H/W" + colon1) || sss.startsWith( "H/W"  + colon2 )   ){
+
+						}
+						else if( sss.startsWith( "MFRP" + colon1) || sss.startsWith( "MFRP"  + colon2 )   ){
+
+						}else if( sss.startsWith( "MFRP") ){
+
+						}
+						else{
+							sss = sss.trim();
+							int length = sss.length();
+							if( length>=5 && length<=35 && sss.indexOf(":") < 0){
+								snList.add( sss.trim() );
+							} else {
+
+							}
+						}
+
+					}
+				}//for
+//				System.out.println(    );
+//				System.out.println(  "======================"   );
+			}
+
+		}
+
+//		for( String sn :  snList  ){
+//			System.out.print(   sn + " , "  );
+//		}
+//		System.out.println();
+//		System.out.println(  snList.size() + "=============" );
+		return snList;
+
+	}
 	public static List<String> parse(String srcStr ){
 
 		List<String> snList = new ArrayList<String>();
@@ -100,7 +184,7 @@ public class QrCodeParser {
 //						System.out.print(  sss + "===" );
 
 						// 以SN:开头的
-						if(  sss.startsWith( "SN" + colon1) ||  sss.startsWith( "SN"  + colon2 ) ){
+						if(  sss.startsWith( "SN" + colon1) ||  sss.startsWith( "SN"  + colon2 )  ||  sss.startsWith( "SN;" )   ){
 							String tmpSn = null;
 							tmpSn = sss.substring(3);
 							int macIndex = tmpSn.indexOf("MAC");
@@ -110,18 +194,24 @@ public class QrCodeParser {
 							if( tmpSn!=null && tmpSn.length()>2 ){
 								snList.add(tmpSn.trim());
 							}
+						}else if(  sss.startsWith( "S/N:") ){
+							String tmpSn = null;
+							tmpSn = sss.substring(4);
+							snList.add(tmpSn.trim());
+
 						}else if( sss.startsWith( "MAC" + colon1) || sss.startsWith( "MAC"  + colon2 )  ) {
 
 						} else if( sss.startsWith( "H/W" + colon1) || sss.startsWith( "H/W"  + colon2 )   ){
 
-						}
-						else if( sss.startsWith( "MFRP" + colon1) || sss.startsWith( "MFRP"  + colon2 )   ){
+						}else if( sss.startsWith( "MFRP" + colon1) || sss.startsWith( "MFRP"  + colon2 )   ){
 
 						}else if( sss.startsWith( "MFRP") ){
 
-						}
-						else{
+						}else{
 							int length = sss.length();
+							if(  sss.contains(colon1) || sss.contains(colon2) ){
+								continue;
+							}
 							if( length>=5 && length<=35 ){
 								snList.add( sss.trim() );
 							} else {
@@ -148,8 +238,9 @@ public class QrCodeParser {
 
 
 	public static void main(String[] args) {
+		System.out.println(":".indexOf(":") >= 0);
+//		initData();
 
-		initData();
 //		for( int i=0 ; i<testData.length ;i++ ){
 //			String tmpStr = testData[i];
 //			if( tmpStr!=null && tmpStr.length()>0 ){
@@ -185,5 +276,6 @@ public class QrCodeParser {
 		}
 		return true;
 	}
+
 
 }

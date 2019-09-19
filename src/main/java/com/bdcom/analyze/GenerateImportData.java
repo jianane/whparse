@@ -1,6 +1,9 @@
-import bean.NCMaterialDoc;
-import bean.ncimport.NCImpBody;
-import bean.ncimport.NCImpHeader;
+package com.bdcom.analyze;
+
+import com.bdcom.bean.NCMaterialDoc;
+import com.bdcom.bean.ncimport.NCImpBody;
+import com.bdcom.bean.ncimport.NCImpHeader;
+import com.bdcom.util.MyUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -113,7 +116,7 @@ public class GenerateImportData {
 	static void generateOnLineData() {
 		Map<String, NCMaterialDoc> pnToNCMaterial = WhparseMain.generateNCMaterial();
 
-		Workbook wb = WhparseMain.readExcel(ONLINE_QICHU_PATH);
+		Workbook wb = MyUtil.readExcel(ONLINE_QICHU_PATH);
 		int sheetNum = wb.getNumberOfSheets();
 //		for (int i = 0; i < sheetNum; i++) {
 		Sheet sheet = wb.getSheetAt(0);

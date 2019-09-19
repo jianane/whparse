@@ -1,4 +1,4 @@
-package bean;
+package com.bdcom.bean;
 
 /**
  * @author Jianan

@@ -1,3 +1,6 @@
+package com.bdcom.analyze;
+
+import com.bdcom.util.MyUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -33,7 +36,7 @@ public class ErrToRightPnParse {
 	}
 
 	static void parseOld() {
-		Workbook wb = WhparseMain.readExcel(ERR_TO_RIGHT_PN);
+		Workbook wb = MyUtil.readExcel(ERR_TO_RIGHT_PN);
 
 		Sheet sheet = wb.getSheetAt(0);
 		Cell cell;
@@ -63,7 +66,7 @@ public class ErrToRightPnParse {
 	static void parseNew() {
 		List<String> fileNames = WhParseStart.travFolder(ERR_TO_RIGHT_PN_SRC);
 		for (String fileName : fileNames) {
-			Workbook wb = WhparseMain.readExcel(fileName);
+			Workbook wb = MyUtil.readExcel(fileName);
 			Sheet sheet = wb.getSheetAt(0);
 			Row row;
 			Cell cell;

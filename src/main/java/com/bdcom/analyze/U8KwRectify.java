@@ -1,3 +1,6 @@
+package com.bdcom.analyze;
+
+import com.bdcom.util.MyUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -17,7 +20,7 @@ public class U8KwRectify {
 	static Map<String, String> selfKwErrorToRight = new HashMap<String, String>();
 
 	static void loadSelfCheckKwRectify(){
-		Workbook wb = WhparseMain.readExcel(SELF_CHECK_KW_RECTIFY_PATH);
+		Workbook wb = MyUtil.readExcel(SELF_CHECK_KW_RECTIFY_PATH);
 		Sheet sheet = wb.getSheetAt(0);
 		Row row;
 		Cell cell;

@@ -1,4 +1,7 @@
-import bean.OriginalBean;
+package com.bdcom.analyze;
+
+import com.bdcom.bean.OriginalBean;
+import com.bdcom.util.MyUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -14,7 +17,7 @@ public class WhParseStart {
 
 	public static final String ERR_TO_RIGHT_PN = "C:/Users/Administrator/Desktop/whscan/ErrToRight/物料档案比对.xls";
 
-	static Map<String, OriginalBean> snUniMap = new HashMap<String, OriginalBean>();
+	public static Map<String, OriginalBean> snUniMap = new HashMap<String, OriginalBean>();
 
 	static List<String> fileList = new ArrayList<String>();
 
@@ -75,6 +78,10 @@ public class WhParseStart {
 			if ("XKSWI-SWI2021C".equals(pn) || "CBNNN-JHJ0151A".equals(pn) ) {
 				continue;
 			}
+			if ("XKPON-PON0359A".equals(pn)) {
+				System.out.println();
+			}
+
 			if (sameSnToPn.containsKey(sn)) {
 				if (!sameSnToPn.get(sn).equals(pn)) {
 					continue;
@@ -121,7 +128,7 @@ public class WhParseStart {
 
 	static Map<String, String> getSameSnToPn(){
 		Map<String, String> snToPn = new HashMap<String, String>();
-		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/Pn_Sn/重复的SN对应的物料编码(2).xlsx");
+		Workbook wb = MyUtil.readExcel("C:/Users/Administrator/Desktop/whscan/Pn_Sn/重复的SN对应的物料编码(2).xlsx");
 		Sheet sheet = wb.getSheetAt(0);
 		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
 			Row row = sheet.getRow(i);
@@ -149,7 +156,7 @@ public class WhParseStart {
 	static void rectifyPn(){
 		Map<String, String> errToRight = new HashMap<String, String>();
 
-		Workbook wb = WhparseMain.readExcel(ErrToRightPnParse.ERR_TO_RIGHT_PATH);
+		Workbook wb = MyUtil.readExcel(ErrToRightPnParse.ERR_TO_RIGHT_PATH);
 		Sheet sheet = wb.getSheetAt(0);
 		Cell cell;
 		Row row;
@@ -201,7 +208,7 @@ public class WhParseStart {
 	public static Set<String> getErrorPn(){
 		Set<String> errorPnSet = new HashSet<String>();
 
-		Workbook wb = WhparseMain.readExcel(ERR_TO_RIGHT_PN);
+		Workbook wb = MyUtil.readExcel(ERR_TO_RIGHT_PN);
 		Sheet sheet = wb.getSheetAt(0);
 		Cell cell;
 		Row row;
@@ -364,7 +371,7 @@ public class WhParseStart {
 	static void parseInDataCol3() {
 		List<String> fileList = WhParseStart.travFolder("C:/Users/Administrator/Desktop/whscan/每日出入库扫码记录/入库扫码记录/column3");
 		for (String fileName : fileList) {
-			Workbook wb = WhparseMain.readExcel(fileName);
+			Workbook wb = MyUtil.readExcel(fileName);
 			Sheet sheet = null;
 			Row row = null;
 			int sheetNum = wb.getNumberOfSheets();
@@ -458,7 +465,7 @@ public class WhParseStart {
 		List<String> fileList = WhParseStart.travFolder("C:/Users/Administrator/Desktop/whscan/每日出入库扫码记录/出库扫码记录");
 		Set<String> snSet = new HashSet<String>();
 		for (String fileName : fileList) {
-			Workbook wb = WhparseMain.readExcel(fileName);
+			Workbook wb = MyUtil.readExcel(fileName);
 			int sheetNum = wb.getNumberOfSheets();
 			for (int i = 0; i < sheetNum; i++) {
 				Sheet sheet = wb.getSheetAt(i);

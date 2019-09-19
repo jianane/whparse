@@ -1,10 +1,17 @@
-package bean.whmap;
+package com.bdcom.bean.whmap;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Jianan
  * @Date
  */
-public class NCKw {
+public class NCOrg {
+
+	public static Map<String, NCOrg> orgCodeToOrg = new HashMap<String, NCOrg>();
+
+	public Map<String, NCKb> u8CodeToNCKb = new HashMap<String, NCKb>();
 
 	String code;
 	String name;
@@ -25,4 +32,6 @@ public class NCKw {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+
 }

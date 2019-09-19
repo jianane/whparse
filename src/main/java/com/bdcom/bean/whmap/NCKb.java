@@ -1,4 +1,4 @@
-package bean.whmap;
+package com.bdcom.bean.whmap;
 
 import java.util.HashMap;
 import java.util.Map;

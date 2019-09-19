@@ -1,6 +1,13 @@
+package com.bdcom.util;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,13 +40,33 @@ public class MyUtil {
 	}
 
 
-	static String getTodayDate(){
+	public static String getTodayDate(){
 		Date date = new Date();
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
 		String dateString = sdf.format(date);
 
 		return dateString;
+	}
+
+	public static Workbook readExcel(String filePath) {
+		Workbook wb = null;
+		if (filePath == null) {
+			return wb;
+		}
+		String extString = filePath.substring(filePath.lastIndexOf("."));
+		InputStream is = null;
+		try {
+			is = new FileInputStream(filePath);
+			if (".xls".equals(extString)) {
+				wb = new HSSFWorkbook(is);
+			} else if (".xlsx".equals(extString) || ".XLSX".equals(extString)) {
+				wb = new XSSFWorkbook(is);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return wb;
 	}
 
 	public static void main(String[] args){

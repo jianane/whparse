@@ -1,3 +1,6 @@
+package com.bdcom.analyze;
+
+import com.bdcom.util.MyUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -20,13 +23,13 @@ public class WhU8NcParse {
 
 	private static Map<String, Set<String>> selfNotInNC = new HashMap<String, Set<String>>();
 
-	static Map<String, String> u8kbToNCkb = new HashMap<String, String>();
-	static Map<String, List<String>> ncKbToU8Kw = new HashMap<String, List<String>>();
+	public static Map<String, String> u8kbToNCkb = new HashMap<String, String>();
+	public static Map<String, List<String>> ncKbToU8Kw = new HashMap<String, List<String>>();
 
 	private static Map<String, List<String>> u8KbToU8Kw = new HashMap<String, List<String>>();
 
-	static void parseKbu8ToNc(){
-		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/仓库对照.xlsx");
+	public static void parseKbu8ToNc(){
+		Workbook wb = MyUtil.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/仓库对照.xlsx");
 		Sheet sheet = wb.getSheetAt(0);//u8 to NC kb
 		Row row;
 		Cell cell;
@@ -46,7 +49,7 @@ public class WhU8NcParse {
 	}
 
 	private static void parseNcBdWh(){
-		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/货位导入-0830.xlsx");
+		Workbook wb = MyUtil.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/货位导入-0830.xlsx");
 		Sheet sheet = wb.getSheetAt(0);
 		Row row;
 		Cell cell;
@@ -81,7 +84,7 @@ public class WhU8NcParse {
 	}
 
 	private static void parseSelfCheckZhMap(){
-		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/onlyCompleteKuBie.xlsx");
+		Workbook wb = MyUtil.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/onlyCompleteKuBie.xlsx");
 		Sheet sheet = wb.getSheetAt(0);
 		Row row;
 		Cell cell;

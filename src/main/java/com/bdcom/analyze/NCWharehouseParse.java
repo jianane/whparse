@@ -1,14 +1,15 @@
-import bean.whmap.NCKb;
-import bean.whmap.NCKw;
-import bean.whmap.NCOrg;
+package com.bdcom.analyze;
+
+import com.bdcom.bean.whmap.NCKb;
+import com.bdcom.bean.whmap.NCKw;
+import com.bdcom.bean.whmap.NCOrg;
+import com.bdcom.util.MyUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,7 +27,7 @@ public class NCWharehouseParse {
 //		kbNameToU8KbCode.put("产品封存库", "86");
 //		kbNameToU8KbCode.put("产品封存库", "86");
 //		kbNameToU8KbCode.put("产品封存库", "86");
-		Workbook wb = WhparseMain.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/huowei(1).xlsx");
+		Workbook wb = MyUtil.readExcel("C:/Users/Administrator/Desktop/whscan/whMap/huowei(1).xlsx");
 		Sheet sheet = wb.getSheetAt(0);
 		Row row;
 		Cell cell;

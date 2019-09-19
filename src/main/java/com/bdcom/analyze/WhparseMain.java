@@ -1,6 +1,9 @@
-import bean.*;
-import bean.ncimport.NCImpBody;
-import bean.ncimport.NCImpHeader;
+package com.bdcom.analyze;
+
+import com.bdcom.bean.*;
+import com.bdcom.bean.ncimport.NCImpBody;
+import com.bdcom.bean.ncimport.NCImpHeader;
+import com.bdcom.util.MyUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
@@ -18,20 +21,20 @@ import java.util.*;
 public class WhparseMain {
 
 	static int SN_START_INDEX = 0;
-	static String IMP_DATE = "2019-08-31";//MyUtil.getTodayDate();
+	static String IMP_DATE = "2019-08-31";//com.bdcom.util.MyUtil.getTodayDate();
 	final static String U8_ONLY_KW = "期初-差异"; // 66
 
-	static Map<String, StatPn> pnToStat = new LinkedHashMap<String, StatPn>();
+	static Map<String, StatPn> pnToStat = new LinkedHashMap<>();
 
-	static Map<NCImpHeader, List<NCImpBody>> headerToBodies = new HashMap<NCImpHeader, List<NCImpBody>>();
+	static Map<NCImpHeader, List<NCImpBody>> headerToBodies = new HashMap<>();
 
-	static Set<String> allScanPn = new HashSet<String>();
-	static Set<String> allU8Pn = new HashSet<String>();
-	static Set<String> allSelfCheckPn = new HashSet<String>();
+	static Set<String> allScanPn = new HashSet<>();
+	static Set<String> allU8Pn = new HashSet<>();
+	static Set<String> allSelfCheckPn = new HashSet<>();
 
-	static Map<String, Map<String, Integer>> pnTo_u8KbToCnt = new HashMap<String, Map<String, Integer>>();
+	static Map<String, Map<String, Integer>> pnTo_u8KbToCnt = new HashMap<>();
 
-	static Map<String, NCMaterialDoc> pnToNCMaterial = new HashMap<String, NCMaterialDoc>();
+	static Map<String, NCMaterialDoc> pnToNCMaterial = new HashMap<>();
 
 
 	final static String SELF_CHECK_PATH = "C:/Users/Administrator/Desktop/whscan/self_check/电子台账0831（关账汇总）.xlsx";
@@ -40,7 +43,7 @@ public class WhparseMain {
 	final static String PN_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案（序列号管理）_0829.xlsx";
 	final static String NC_MATERIAL_DOC_PATH = "C:/Users/Administrator/Desktop/whscan/pdoc/物料档案20190902.xlsx";
 
-	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0902/";
+	final static String EXPORT_PRE = "C:/Users/Administrator/Desktop/whscan/stat_jianan/0917/";
 	final static String EXPORT_PATH_ALL = EXPORT_PRE + "all_jianan.xlsx";
 	final static String EXPORT_PATH_OTHER = EXPORT_PRE + "other_jianan.xlsx";
 	final static String EXPORT_PATH_NOT_IN_NC = EXPORT_PRE + "notInNC_jianan.xlsx";
@@ -58,8 +61,8 @@ public class WhparseMain {
 
 		generateNCMaterial();
 
-		createImportStatistics();
-//		createStatistics();
+		createStatistics();
+//		createImportStatistics();
 	}
 
 	public static Map<String, NCMaterialDoc> generateNCMaterial() {
@@ -106,7 +109,7 @@ public class WhparseMain {
 
 	}
 
-	static void statAddStock() {
+	public static void statAddStock() {
 		Map<String, Stock> pnToStock = StockParse.parseStock();
 		Set<Map.Entry<String, StatPn>> entries = pnToStat.entrySet();
 		for (Map.Entry<String, StatPn> entry : entries) {
@@ -421,9 +424,9 @@ public class WhparseMain {
 		for (Map.Entry<String, StatPn> entry : entries) {
 			StatPn stat = entry.getValue();
 			String pn = stat.getPn();
-//			if (StockParse.virtualPnSet.contains(pn)) {
-//				continue;
-//			}
+			if (StockParse.virtualPnSet.contains(pn)) {
+				continue;
+			}
 			allStats.add(stat);
 		}
 		for (StatPn statPn : allStats) {
@@ -489,7 +492,7 @@ public class WhparseMain {
 		}
 	}
 
-	static void createImportStatistics() {
+	public static void createImportStatistics() {
 		WhU8NcParse.parseKbu8ToNc();
 		Map<String, String> u8KbToNcKb = WhU8NcParse.u8kbToNCkb;
 		String orgNo = "01";
@@ -498,7 +501,7 @@ public class WhparseMain {
 		for (Map.Entry<String, StatPn> entry : entries) {
 			StatPn stat = entry.getValue();
 			String pn = stat.getPn();
-//			if (StockParse.virtualPnSet.contains(pn)) {
+//			if (com.bdcom.analyze.StockParse.virtualPnSet.contains(pn)) {
 //				continue;
 //			}
 			allStats.add(stat);
@@ -506,7 +509,7 @@ public class WhparseMain {
 		Map<String, OriginalBean> originalMap = WhParseStart.snUniMap;
 		for (OriginalBean originalBean : originalMap.values()) {
 			String pn = originalBean.getPn();
-//			if (StockParse.virtualPnSet.contains(pn)) {
+//			if (com.bdcom.analyze.StockParse.virtualPnSet.contains(pn)) {
 //				continue;
 //			}
 			String sn = originalBean.getSn();
@@ -514,6 +517,9 @@ public class WhparseMain {
 
 			String kw = originalBean.getKw();
 			String kbCode = WhU8NcParse.getKbCode(pn, kw);
+			if (kbCode == null) {
+				System.out.println();
+			}
 			String impKw = getImpKw(pn, kw);
 
 			NCImpBody body = new NCImpBody();
@@ -542,7 +548,7 @@ public class WhparseMain {
 						Integer cnt = entry.getValue();
 						String kbCode = u8KbToNcKb.get(u8Kb);
 
-						String kw = U8_ONLY_KW;// 待定@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+						String kw = U8_ONLY_KW;
 
 						generateBody(pn, cnt, kw, orgNo, kbCode);
 
@@ -611,6 +617,9 @@ public class WhparseMain {
 
 	static void generateBodyByRealKw(String pn, int cnt, String kw, String orgNo) {
 		String kbCode = WhU8NcParse.getKbCode(pn, kw);
+		if (kbCode == null) {
+			System.out.println(pn + " -> " + kw);
+		}
 		String impKw = getImpKw(pn, kw);
 		generateBody(pn, cnt, impKw, orgNo, kbCode);
 	}
@@ -638,7 +647,7 @@ public class WhparseMain {
 			body.setCount(cnt + "");
 			body.setImpDate(IMP_DATE);
 			body.setKw(kw);
-//			body.setSn(InventedSerialNumberUtil.getInventedSerialNumber(orgNo, kbCode, body.getKw(), SN_START_INDEX));
+//			body.setSn(com.bdcom.analyze.InventedSerialNumberUtil.getInventedSerialNumber(orgNo, kbCode, body.getKw(), SN_START_INDEX));
 //			body.setSnUnit(unit);
 
 			setHeaderToBodies(orgNo, kbCode, body);
@@ -647,8 +656,7 @@ public class WhparseMain {
 
 	static void setHeaderToBodies(String orgNo, String kbCode, NCImpBody body) {
 		if (kbCode == null) {
-			System.out.println();
-			throw new RuntimeException();
+			throw new NullPointerException();
 		}
 		NCImpHeader header = NCImpHeader.getHeader(orgNo, kbCode);
 		List<NCImpBody> impBodies = headerToBodies.get(header);
@@ -710,13 +718,13 @@ public class WhparseMain {
 				cnt++;
 				splitBodyList.add(body);
 				if (cnt % splitCnt == 0) {
-					fileCnt ++;
+					fileCnt++;
 					GenerateImportData.createImpExcel(path + fileCnt + ".xlsx", header, splitBodyList);
 					splitBodyList.clear();
 				}
 			}
 			if (splitBodyList.size() > 0) {
-				fileCnt ++;
+				fileCnt++;
 				GenerateImportData.createImpExcel(path + fileCnt + ".xlsx", header, splitBodyList);
 				splitBodyList.clear();
 			}
@@ -735,13 +743,14 @@ public class WhparseMain {
 		return pnToNCMaterial.get(pn).isSerial();
 	}
 
-	static String getImpUnit(String pn){
+	static String getImpUnit(String pn) {
 		return getUnitNo(pn);
 //		return getUnit(pn);
 	}
-	static String getImpKw(String pn, String kw){
+
+	static String getImpKw(String pn, String kw) {
 		String impKw = WhU8NcParse.getKwName(pn, kw);
-//		String impKw = WhU8NcParse.getKwCode(pn, kw);
+//		String impKw = com.bdcom.analyze.WhU8NcParse.getKwCode(pn, kw);
 		return impKw;
 	}
 
